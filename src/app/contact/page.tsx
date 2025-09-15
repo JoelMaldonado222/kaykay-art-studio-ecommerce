@@ -46,7 +46,7 @@ export default function ContactPage() {
                             required
                             rows={5}
                             className="w-full rounded-lg border border-white/20 bg-white/80 px-3 py-2 text-purple-900 placeholder-purple-900/60 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                            placeholder="Tell us what you’re looking for…"
+                            placeholder="Tell us what you are looking for…"
                         />
                     </label>
 

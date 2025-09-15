@@ -28,7 +28,8 @@ export default function Navbar2() {
                 <Link href="/" className="flex items-center gap-2">
                     <span className="text-3xl">🎨</span>
                     <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-2xl font-extrabold text-transparent sm:text-3xl tracking-tight">
-            KayKay’s Art Studio
+            <span>{`KayKay's Art Studio`} </span>
+
           </span>
                 </Link>
 
