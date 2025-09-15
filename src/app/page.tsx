@@ -88,7 +88,7 @@ export default function LessonsPage() {
                     <p className="mt-4 text-lg sm:text-xl text-purple-100">
                         Every drawing starts with a single line. Whether you love cute characters,
                         superheroes, or fun animals! We have something for you.
-                        Keep practicing, and you'll be amazed at what you can create! 🎨
+                        Keep practicing, and you will be amazed at what you can create! 🎨
                     </p>
                     <button className="mt-6 px-6 py-3 bg-yellow-400 text-purple-900 font-bold rounded-xl shadow-lg hover:bg-yellow-300 transition">
                         Start Your Next Lesson
