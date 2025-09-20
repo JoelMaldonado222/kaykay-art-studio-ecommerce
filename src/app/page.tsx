@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar2";
 import LessonCard from "@/components/LessonCard";
 import SpanishLessonCard from "@/components/SpanishLessonCard";
+import { button } from "framer-motion/client";
 
 const lessons = [
     {
@@ -15,7 +16,7 @@ const lessons = [
         description: "Face proportions and expressive eyes, step-by-step.",
         href: "https://www.youtube.com/watch?v=yfB0wlHaIJg", // ← put real URL
         imageSrc: "/ZoeyEnglish.png",
-        level: "Beginner" as const,
+        level: "Intermediate" as const,
     },
     {
         title: "How to Draw Lilo",
@@ -90,9 +91,7 @@ export default function LessonsPage() {
                         superheroes, or fun animals! We have something for you.
                         Keep practicing, and you will be amazed at what you can create! 🎨
                     </p>
-                    <button className="mt-6 px-6 py-3 bg-yellow-400 text-purple-900 font-bold rounded-xl shadow-lg hover:bg-yellow-300 transition">
-                        Start Your Next Lesson
-                    </button>
+                  
                 </div>
             </section>
 

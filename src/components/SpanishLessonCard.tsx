@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useCart } from "@/context/CartContext";   // ✅ add
 
 type LessonCardProps = {
     title: string;
@@ -20,6 +21,8 @@ export default function LessonCard({
                                        level = "Beginner",
                                    }: LessonCardProps) {
     const isExternal = href.startsWith("http");
+    const { addItem } = useCart();                  // ✅ add
+    const id = title.toLowerCase().replace(/\s+/g, "-"); // ✅ add (same as English)
 
     return (
         <motion.article
@@ -40,13 +43,13 @@ export default function LessonCard({
 
             <div className="mt-4 space-y-3">
                 <div className="flex items-center gap-2">
-          <span className="rounded-full bg-purple-600/10 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-200">
-            {level}
-          </span>
+                    <span className="rounded-full bg-purple-600/10 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-200">
+                        {level}
+                    </span>
                     {isExternal && (
                         <span className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-600">
-              YouTube
-            </span>
+                            YouTube
+                        </span>
                     )}
                 </div>
 
@@ -56,23 +59,33 @@ export default function LessonCard({
 
                 <p className="text-sm text-gray-700 dark:text-purple-100/80">{description}</p>
 
-                {isExternal ? (
-                    <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                {/* ✅ Buttons row: Add to Cart + Watch/View (parity with English) */}
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => addItem({ id, title, imageSrc, href })}
+                        className="inline-flex items-center justify-center rounded-xl border border-yellow-400/40 bg-yellow-400 px-3 py-2 text-sm font-semibold text-purple-900 shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     >
-                        Watch on YouTube
-                    </a>
-                ) : (
-                    <Link
-                        href={href}
-                        className="inline-flex items-center justify-center rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    >
-                        View Lesson
-                    </Link>
-                )}
+                        Add to Cart
+                    </button>
+
+                    {isExternal ? (
+                        <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        >
+                            Watch on YouTube
+                        </a>
+                    ) : (
+                        <Link
+                            href={href}
+                            className="inline-flex items-center justify-center rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        >
+                            View Lesson
+                        </Link>
+                    )}
+                </div>
             </div>
 
             <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rotate-12 rounded-full bg-fuchsia-400/40 blur-3xl" />
