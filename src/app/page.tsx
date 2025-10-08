@@ -91,7 +91,7 @@ export default function LessonsPage() {
                         superheroes, or fun animals! We have something for you.
                         Keep practicing, and you will be amazed at what you can create! 🎨
                     </p>
-                  
+
                 </div>
             </section>
 

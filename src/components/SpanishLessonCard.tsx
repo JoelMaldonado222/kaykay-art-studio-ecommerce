@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useCart } from "@/context/CartContext";   // ✅ add
+import { useCart } from "@/context/CartContext";   
 
 type LessonCardProps = {
     title: string;
@@ -59,13 +59,13 @@ export default function LessonCard({
 
                 <p className="text-sm text-gray-700 dark:text-purple-100/80">{description}</p>
 
-                {/* ✅ Buttons row: Add to Cart + Watch/View (parity with English) */}
+                {/* ✅ Buttons row: Add to Cart + Watch/View */}
                 <div className="flex gap-2">
                     <button
                         onClick={() => addItem({ id, title, imageSrc, href })}
                         className="inline-flex items-center justify-center rounded-xl border border-yellow-400/40 bg-yellow-400 px-3 py-2 text-sm font-semibold text-purple-900 shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     >
-                        Add to Cart
+                        Añadir al carrito
                     </button>
 
                     {isExternal ? (
@@ -75,17 +75,23 @@ export default function LessonCard({
                             rel="noopener noreferrer"
                             className="inline-flex items-center justify-center rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
                         >
-                            Watch on YouTube
+                            Ver en YouTube
                         </a>
                     ) : (
                         <Link
                             href={href}
                             className="inline-flex items-center justify-center rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
                         >
-                            View Lesson
+                            Ver lección
                         </Link>
                     )}
                 </div>
+
+                {/* ✅ Clarification note in Spanish */}
+                <p className="mt-2 text-xs text-purple-200/80">
+                    🎥 <span className="font-semibold">Ver en YouTube</span> = Vista previa gratis <br />
+                    🛒 <span className="font-semibold">Añadir al carrito</span> = Lección completa de pago con pasos guiados
+                </p>
             </div>
 
             <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rotate-12 rounded-full bg-fuchsia-400/40 blur-3xl" />

@@ -40,8 +40,8 @@ export default function LessonCard({ title, description, href, imageSrc, level =
             <div className="mt-4 space-y-2">
                 <span className="rounded-full bg-purple-600/10 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-200">{level}</span>
                 <span className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs font-semibold text-red-600">
-                            YouTube
-                        </span>
+                    YouTube
+                </span>
                 <h3 className="text-lg font-extrabold tracking-tight text-purple-900 dark:text-purple-50">{title}</h3>
                 <p className="text-sm text-gray-700 dark:text-purple-100/80">{description}</p>
 
@@ -72,6 +72,12 @@ export default function LessonCard({ title, description, href, imageSrc, level =
                         </Link>
                     )}
                 </div>
+
+                {/* ✅ Clarification note */}
+                <p className="mt-2 text-xs text-purple-200/80">
+                    🎥 <span className="font-semibold">Watch on YouTube</span> = Free sample preview<br />
+                    🛒 <span className="font-semibold">Add to Cart</span> = Paid lesson with full guided steps
+                </p>
             </div>
 
             <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rotate-12 rounded-full bg-fuchsia-400/40 blur-3xl" />
