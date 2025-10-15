@@ -1,7 +1,8 @@
 // src/app/lessons/page.tsx
+"use client";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar2";
 import LessonCard from "@/components/LessonCard";
-
 
 const lessons = [
     {
@@ -48,8 +49,43 @@ const lessons = [
     },
 ];
 
-
 export default function LessonsPage() {
+    const [dbLessons, setDbLessons] = useState<any[]>([]);
+
+    // ✅ new backend connection
+    useEffect(() => {
+        async function fetchLessons() {
+            try {
+                const res = await fetch("/api/get-lessons?lang=en");
+                const data = await res.json();
+
+                if (data.lessons) {
+                    const formatted = data.lessons.map((l: any) => ({
+                        title: l.title,
+                        description: "Lesson synced from database",
+                        href: l.youtube_url,
+                        imageSrc: l.image_path || "/placeholder.png",
+                        level: l.level || "Beginner",
+                    }));
+                    setDbLessons(formatted);
+                }
+            } catch (err) {
+                console.error("Error loading lessons:", err);
+            }
+        }
+
+        fetchLessons();
+    }, []);
+
+    // merge static + db lessons but skip duplicates by title
+    const allLessons = [
+        ...lessons,
+        ...dbLessons.filter(
+            (dbLesson) => !lessons.some((s) => s.title === dbLesson.title)
+        ),
+    ];
+
+
     return (
         <main className="min-h-screen bg-gradient-to-b from-purple-900 to-purple-600 text-white">
             <Navbar />
@@ -58,9 +94,9 @@ export default function LessonsPage() {
             <section id="english" className="mx-auto max-w-6xl px-4 py-12 scroll-mt-24">
                 {/* Library header */}
                 <div className="text-center mb-8">
-          <span className="inline-block rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-300 tracking-wide">
-            Library · English
-          </span>
+                    <span className="inline-block rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-300 tracking-wide">
+                        Library · English
+                    </span>
 
                     <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold text-yellow-300 tracking-tight">
                         📚 Your Drawing Library
@@ -73,15 +109,16 @@ export default function LessonsPage() {
                     <div className="relative mt-8">
                         <div className="border-t border-yellow-400/30"></div>
                         <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-800 px-3 text-sm font-semibold text-yellow-300 rounded-md">
-              🎨 Start Here
-            </span>
+                            🎨 Start Here
+                        </span>
                     </div>
                 </div>
 
                 {/* Cards grid */}
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {lessons.map((l) => (
-                        <LessonCard key={l.title} {...l} />
+                    {allLessons.map((l) => (
+                        <LessonCard key={l.title + Math.random().toString(36).substring(2, 9)} {...l} />
+
                     ))}
                 </div>
             </section>

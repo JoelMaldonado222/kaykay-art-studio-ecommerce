@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from "react";
 
 export type CartItem = {
     id: string;
+    lessonId?: string;
     title: string;
     imageSrc?: string;
     href?: string;
@@ -24,26 +25,57 @@ const CartContext = createContext<CartCtx | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
 
-    // hydrate from localStorage (frontend only)
+    // Generate or reuse dev user ID (temporary until auth)
     useEffect(() => {
-        try {
-            const saved = typeof window !== "undefined" ? localStorage.getItem("cart") : null;
-            if (saved) setItems(JSON.parse(saved));
-        } catch {
-            // ignore corrupted storage
+        if (typeof window !== "undefined") {
+            let devUserId = localStorage.getItem("dev_uid");
+            if (!devUserId) {
+                devUserId = crypto.randomUUID();
+                localStorage.setItem("dev_uid", devUserId);
+            }
         }
     }, []);
 
-    // persist to localStorage
+    // 🧠 Load from Supabase when app starts
+    useEffect(() => {
+        const loadCart = async () => {
+            const devUserId = localStorage.getItem("dev_uid");
+            if (!devUserId) return;
+
+            try {
+                const res = await fetch(`/api/cart?user_id=${devUserId}`);
+                const json = await res.json();
+
+                if (json?.items) {
+                    const mapped = json.items.map((i: any) => ({
+                        id: i.lesson?.id ?? i.lesson_id ?? i.id,
+                        lessonId: i.lesson_id ?? i.id,
+                        title: i.lesson?.title ?? "Untitled Lesson",
+                        imageSrc: i.lesson?.image_path ?? i.lesson?.image ?? "/placeholder.png",
+                        href: i.lesson?.youtube_url ?? "#",
+                        qty: i.quantity ?? 1,
+                        price: i.lesson?.price ?? 0,
+                    }));
+                    setItems(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to load cart:", err);
+            }
+        };
+        loadCart();
+    }, []);
+
+    // 🧩 Save to localStorage (backup only)
     useEffect(() => {
         try {
             localStorage.setItem("cart", JSON.stringify(items));
         } catch {
-            // storage might be unavailable (private mode, etc.)
+            /* ignore */
         }
     }, [items]);
 
-    const addItem = (item: CartItem) => {
+    // ➕ Add item
+    const addItem = async (item: CartItem) => {
         setItems((prev) => {
             const idx = prev.findIndex((p) => p.id === item.id);
             if (idx >= 0) {
@@ -53,10 +85,63 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             }
             return [...prev, { ...item, qty: 1 }];
         });
+
+        try {
+            const devUserId = localStorage.getItem("dev_uid");
+            if (!devUserId) return;
+
+            const res = await fetch("/api/cart", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: devUserId,
+                    lesson_id: item.lessonId ?? item.id,
+                    quantity: 1,
+                }),
+            });
+
+            const json = await res.json();
+            if (!res.ok) console.error("Cart API error:", json.error || json);
+        } catch (err) {
+            console.error("Failed to sync cart:", err);
+        }
     };
 
-    const removeItem = (id: string) => setItems((prev) => prev.filter((p) => p.id !== id));
-    const clearCart = () => setItems([]);
+    // ➖ Remove one item
+    const removeItem = async (id: string) => {
+        setItems((prev) => prev.filter((p) => p.id !== id));
+
+        try {
+            const devUserId = localStorage.getItem("dev_uid");
+            if (!devUserId) return;
+
+            await fetch("/api/cart", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: devUserId, lesson_id: id }),
+            });
+        } catch (err) {
+            console.error("Failed to remove item:", err);
+        }
+    };
+
+    // 🧹 Clear all items
+    const clearCart = async () => {
+        setItems([]);
+
+        try {
+            const devUserId = localStorage.getItem("dev_uid");
+            if (!devUserId) return;
+
+            await fetch("/api/cart", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: devUserId }),
+            });
+        } catch (err) {
+            console.error("Failed to clear cart:", err);
+        }
+    };
 
     const count = useMemo(() => items.reduce((s, it) => s + (it.qty ?? 1), 0), [items]);
     const total = useMemo(() => items.reduce((s, it) => s + (it.price ?? 0) * (it.qty ?? 1), 0), [items]);
