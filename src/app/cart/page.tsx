@@ -5,13 +5,36 @@ import { useCart } from "@/context/CartContext";
 import type { CartItem } from "@/context/CartContext";
 
 export default function CartPage() {
-    const cart = useCart(); // provider required
+    const cart = useCart();
     const items: CartItem[] = cart.items ?? [];
     const removeItem = cart.removeItem ?? (() => {});
     const clearCart = cart.clearCart ?? (() => {});
     const total =
         cart.total ??
         items.reduce((s: number, it: CartItem) => s + (it.price ?? 0), 0);
+
+    // ✅ Checkout handler
+    const handleCheckout = async () => {
+        try {
+            const res = await fetch("/api/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items }),
+            });
+
+            const json = await res.json();
+
+            if (json?.url) {
+                window.location.href = json.url; // ✅ Redirect to Stripe Checkout
+            } else {
+                console.error("Checkout error:", json.error || json);
+                alert("Something went wrong starting checkout");
+            }
+        } catch (err) {
+            console.error("Checkout failed:", err);
+            alert("Failed to connect to checkout");
+        }
+    };
 
     return (
         <main className="mx-auto max-w-4xl p-6">
@@ -95,10 +118,10 @@ export default function CartPage() {
                                 Clear Cart
                             </button>
                             <button
-                                disabled
-                                className="cursor-not-allowed rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white opacity-70"
+                                onClick={handleCheckout}
+                                className="rounded-xl border border-purple-600/30 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
                             >
-                                Checkout (frontend only)
+                                Checkout
                             </button>
                         </div>
                     </div>

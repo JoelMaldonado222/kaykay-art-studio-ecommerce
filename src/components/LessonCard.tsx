@@ -6,19 +6,17 @@ import { motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 
 type LessonCardProps = {
-    id?: string;                  // optional local slug (kept for UI keying)
-    lessonId?: string;            // ✅ real Supabase UUID for backend
+    id?: string;
+    lessonId?: string; // ✅ real UUID from Supabase
     title: string;
-    href: string;                 // internal (/lessons/...) or external (YouTube)
+    href: string;
     imageSrc?: string;
     level: string;
-
-
 };
 
 export default function LessonCard({
                                        id,
-                                       lessonId,                     // ✅ new prop
+                                       lessonId,
                                        title,
                                        href,
                                        imageSrc,
@@ -27,15 +25,23 @@ export default function LessonCard({
     const isExternal = href.startsWith("http");
     const { addItem } = useCart();
 
-    // fallback local id if none provided (used only for client cart state)
+    // fallback ID for local cart display
     const localId = id ?? title.toLowerCase().replace(/\s+/g, "-");
 
     async function handleAddToCart() {
-        // 1) update local cart state (for UI)
-        addItem({ id: localId, title, imageSrc, href });
+        // 1️⃣ Local UI cart update
+        addItem({
+            id: localId,
+            title,
+            imageSrc,
+            href,
+        });
 
-        // 2) sync to backend only if we have a real UUID
-        if (!lessonId) return; // no backend write if this card isn't tied to DB yet
+        // 2️⃣ Sync with backend if we have a real UUID
+        if (!lessonId || lessonId.length !== 36) {
+            console.warn("Skipping backend sync — invalid or missing UUID:", lessonId);
+            return;
+        }
 
         try {
             const res = await fetch("/api/cart", {
@@ -43,7 +49,7 @@ export default function LessonCard({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     user_id: "00000000-0000-0000-0000-000000000001", // temp dev user
-                    lesson_id: lessonId,                             // ✅ real UUID
+                    lesson_id: lessonId, // ✅ real UUID from Supabase
                     quantity: 1,
                 }),
             });
@@ -51,9 +57,11 @@ export default function LessonCard({
             const json = await res.json();
             if (!res.ok) {
                 console.error("Cart API error:", json.error || json);
+            } else {
+                console.log("✅ Cart updated successfully:", json);
             }
         } catch (err) {
-            console.error("Failed to sync cart:", err);
+            console.error("❌ Failed to sync cart:", err);
         }
     }
 
@@ -65,7 +73,7 @@ export default function LessonCard({
         >
             <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gradient-to-br from-purple-200 to-fuchsia-300 dark:from-purple-800 dark:to-fuchsia-700">
                 <Image
-                    src={imageSrc || "/LiloEnglish.png"}
+                    src={imageSrc || "/default-lesson-placeholder.png"}
                     alt={title}
                     width={640}
                     height={360}
@@ -90,15 +98,23 @@ export default function LessonCard({
                     {title}
                 </h3>
 
-                <p className="text-sm text-gray-700 dark:text-purple-100/80">{}</p>
-
+                {/* ✅ Fixed button: now calls handler that posts UUID correctly */}
                 <div className="flex gap-2">
                     <button
-                        onClick={handleAddToCart}
-                        className="inline-flex items-center justify-center rounded-xl border border-yellow-400/40 bg-yellow-400 px-3 py-2 text-sm font-semibold text-purple-900 shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        onClick={() =>
+                            addItem({
+                                id: title.toLowerCase().replace(/\s+/g, "-"), // local fallback id
+                                lessonId, // real Supabase UUID
+                                title,
+                                imageSrc,
+                                href,
+                            })
+                        }
+                        className="bg-yellow-400 text-purple-900 hover:bg-yellow-300 font-semibold px-4 py-2 rounded-full"
                     >
                         Add to Cart
                     </button>
+
 
                     {isExternal ? (
                         <a

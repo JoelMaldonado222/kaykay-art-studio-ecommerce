@@ -1,98 +1,78 @@
-// src/app/lessons/page.tsx
 "use client";
+
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar2";
 import LessonCard from "@/components/LessonCard";
 
-const lessons = [
-    {
-        title: "How to Draw Labubu",
-        description: "Cute character with simple shapes and bold outlines.",
-        href: "https://www.youtube.com/watch?v=2NjhRPGtOng&t=10s",
-        imageSrc: "/LaBuBuEnglish.png",
-        level: "Beginner" as const,
-    },
-    {
-        title: "How to Draw Zoey (K-POP Demon Hunters)",
-        description: "Focus on face proportions and expressive eyes.",
-        href: "https://www.youtube.com/watch?v=yfB0wlHaIJg&t=11s",
-        imageSrc: "/ZoeyEnglish.png",
-        level: "Intermediate" as const,
-    },
-    {
-        title: "How to Draw Lilo",
-        description: "Clean steps with hair flow and pose basics.",
-        href: "https://www.youtube.com/watch?v=3LJI6gPkcj0&t=712s",
-        imageSrc: "/LiloEnglish.png",
-        level: "Intermediate" as const,
-    },
-    {
-        title: "How to Draw Mickey Mouse",
-        description: "Classic Disney character with bold outlines and friendly shapes.",
-        href: "https://www.youtube.com/watch?v=uYHiEUuTNA8",
-        imageSrc: "/MickeyMouseEnglish.png",
-        level: "Beginner" as const,
-    },
-    {
-        title: "How to Draw Joy (Inside Out)",
-        description: "Expressive emotions with bright colors and playful features.",
-        href: "https://www.youtube.com/watch?v=Czu0TprmKko&t=42s",
-        imageSrc: "/Joy.png",
-        level: "Intermediate" as const,
-    },
-    {
-        title: "How to Draw Mega Dave (Minion)",
-        description: "Fun Minion design with goggles, overalls, and cheeky grin.",
-        href: "https://www.youtube.com/watch?v=X1385akccbo",
-        imageSrc: "/MegaDave.png",
-        level: "Beginner" as const,
-    },
-];
+// ✅ Lesson type definition
+type Lesson = {
+    id: string;
+    title: string;
+    youtube_url: string;
+    image_path: string | null;
+    level: string;
+    language: string;
+};
 
 export default function LessonsPage() {
-    const [dbLessons, setDbLessons] = useState<any[]>([]);
+    const [englishLessons, setEnglishLessons] = useState<Lesson[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    // ✅ new backend connection
     useEffect(() => {
         async function fetchLessons() {
             try {
                 const res = await fetch("/api/get-lessons?lang=en");
                 const data = await res.json();
 
-                if (data.lessons) {
-                    const formatted = data.lessons.map((l: any) => ({
-                        title: l.title,
-                        description: "Lesson synced from database",
-                        href: l.youtube_url,
-                        imageSrc: l.image_path || "/placeholder.png",
-                        level: l.level || "Beginner",
-                    }));
-                    setDbLessons(formatted);
-                }
+                // ✅ Support both wrapped and direct array response
+                const lessonsArray: Lesson[] = Array.isArray(data.lessons)
+                    ? data.lessons
+                    : Array.isArray(data)
+                        ? data
+                        : [];
+
+                // ✅ Filter English lessons just to be sure
+                const filtered = lessonsArray.filter(
+                    (l: Lesson) => l.language?.toLowerCase() === "en"
+                );
+
+                setEnglishLessons(filtered);
             } catch (err) {
                 console.error("Error loading lessons:", err);
+                setError("Unable to load lessons from Supabase");
+            } finally {
+                setLoading(false);
             }
         }
 
         fetchLessons();
     }, []);
 
-    // merge static + db lessons but skip duplicates by title
-    const allLessons = [
-        ...lessons,
-        ...dbLessons.filter(
-            (dbLesson) => !lessons.some((s) => s.title === dbLesson.title)
-        ),
-    ];
+    if (loading) {
+        return (
+            <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-900 to-purple-600 text-white">
+                <p className="text-xl text-yellow-300 animate-pulse">
+                    🎨 Loading lessons...
+                </p>
+            </main>
+        );
+    }
 
+    if (error) {
+        return (
+            <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-900 to-purple-600 text-white">
+                <p className="text-xl text-red-400">{error}</p>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-gradient-to-b from-purple-900 to-purple-600 text-white">
             <Navbar />
 
-            {/* ENGLISH LIBRARY */}
+            {/* ENGLISH LIBRARY SECTION */}
             <section id="english" className="mx-auto max-w-6xl px-4 py-12 scroll-mt-24">
-                {/* Library header */}
                 <div className="text-center mb-8">
                     <span className="inline-block rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-300 tracking-wide">
                         Library · English
@@ -102,7 +82,8 @@ export default function LessonsPage() {
                         📚 Your Drawing Library
                     </h1>
                     <p className="mt-3 max-w-2xl mx-auto text-base sm:text-lg text-purple-100">
-                        Pick a lesson and start drawing. Short, kid-friendly tutorials with clear steps.
+                        Pick a lesson and start drawing! Each tutorial is short,
+                        kid-friendly, and teaches clear step-by-step drawing skills.
                     </p>
 
                     {/* playful divider */}
@@ -114,11 +95,17 @@ export default function LessonsPage() {
                     </div>
                 </div>
 
-                {/* Cards grid */}
+                {/* ✅ Dynamic Cards from Supabase */}
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {allLessons.map((l) => (
-                        <LessonCard key={l.title + Math.random().toString(36).substring(2, 9)} {...l} />
-
+                    {englishLessons.map((l) => (
+                        <LessonCard
+                            key={l.id}
+                            lessonId={l.id}
+                            title={l.title}
+                            href={l.youtube_url}
+                            imageSrc={l.image_path || ""}
+                            level={l.level || "Beginner"}
+                        />
                     ))}
                 </div>
             </section>

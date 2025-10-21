@@ -7,10 +7,10 @@ import { useCart } from "@/context/CartContext";
 
 type LessonCardProps = {
     title: string;
-    href?: string; //
+    href?: string;
     imageSrc?: string;
     level: string;
-    lessonId?: string;
+    lessonId?: string; // ✅ real Supabase UUID
 };
 
 export default function SpanishLessonCard({
@@ -18,10 +18,43 @@ export default function SpanishLessonCard({
                                               href,
                                               imageSrc,
                                               level = "Principiante",
+                                              lessonId,
                                           }: LessonCardProps) {
     const isExternal = href && href.startsWith("http");
     const { addItem } = useCart();
-    const id = title.toLowerCase().replace(/\s+/g, "-");
+    const localId = title.toLowerCase().replace(/\s+/g, "-");
+
+    async function handleAddToCart() {
+        // 1️⃣ Local cart update (UI)
+        addItem({ id: localId, title, imageSrc, href });
+
+        // 2️⃣ Backend sync if UUID available
+        if (!lessonId || lessonId.length !== 36) {
+            console.warn("Skipping backend sync — invalid or missing UUID:", lessonId);
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/cart", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user_id: "00000000-0000-0000-0000-000000000001", // temp dev user
+                    lesson_id: lessonId, // ✅ real UUID
+                    quantity: 1,
+                }),
+            });
+
+            const json = await res.json();
+            if (!res.ok) {
+                console.error("Cart API error:", json.error || json);
+            } else {
+                console.log("✅ Carrito actualizado correctamente:", json);
+            }
+        } catch (err) {
+            console.error("❌ Error al sincronizar el carrito:", err);
+        }
+    }
 
     return (
         <motion.article
@@ -32,7 +65,7 @@ export default function SpanishLessonCard({
             {/* Imagen del tutorial */}
             <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gradient-to-br from-purple-200 to-fuchsia-300 dark:from-purple-800 dark:to-fuchsia-700">
                 <Image
-                    src={imageSrc || "/placeholder.png"}
+                    src={imageSrc || "/default-lesson-placeholder.png"}
                     alt={title}
                     width={640}
                     height={360}
@@ -58,10 +91,18 @@ export default function SpanishLessonCard({
                     {title}
                 </h3>
 
-                {/* ✅ Botones: Añadir al carrito + Ver en YouTube o Coming Soon */}
+                {/* ✅ Botones */}
                 <div className="flex gap-2">
                     <button
-                        onClick={() => addItem({ id, title, imageSrc, href })}
+                        onClick={() =>
+                            addItem({
+                                id: title.toLowerCase().replace(/\s+/g, "-"), // local fallback id
+                                lessonId, // real Supabase UUID
+                                title,
+                                imageSrc,
+                                href,
+                            })
+                        }
                         className="inline-flex items-center justify-center rounded-xl border border-yellow-400/40 bg-yellow-400 px-3 py-2 text-sm font-semibold text-purple-900 shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     >
                         Añadir al carrito

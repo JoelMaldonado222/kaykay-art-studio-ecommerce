@@ -51,7 +51,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                         id: i.lesson?.id ?? i.lesson_id ?? i.id,
                         lessonId: i.lesson_id ?? i.id,
                         title: i.lesson?.title ?? "Untitled Lesson",
-                        imageSrc: i.lesson?.image_path ?? i.lesson?.image ?? "/placeholder.png",
+                        imageSrc:
+                            i.lesson?.image_path ??
+                            i.lesson?.image ??
+                            "/default-lesson-placeholder.png",
                         href: i.lesson?.youtube_url ?? "#",
                         qty: i.quantity ?? 1,
                         price: i.lesson?.price ?? 0,
@@ -95,7 +98,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     user_id: devUserId,
-                    lesson_id: item.lessonId ?? item.id,
+                    lesson_id:
+                        item.lessonId && item.lessonId.length === 36
+                            ? item.lessonId
+                            : item.id,
                     quantity: 1,
                 }),
             });
@@ -143,11 +149,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const count = useMemo(() => items.reduce((s, it) => s + (it.qty ?? 1), 0), [items]);
-    const total = useMemo(() => items.reduce((s, it) => s + (it.price ?? 0) * (it.qty ?? 1), 0), [items]);
+    const count = useMemo(
+        () => items.reduce((s, it) => s + (it.qty ?? 1), 0),
+        [items]
+    );
+    const total = useMemo(
+        () => items.reduce((s, it) => s + (it.price ?? 0) * (it.qty ?? 1), 0),
+        [items]
+    );
 
     return (
-        <CartContext.Provider value={{ items, count, total, addItem, removeItem, clearCart }}>
+        <CartContext.Provider
+            value={{ items, count, total, addItem, removeItem, clearCart }}
+        >
             {children}
         </CartContext.Provider>
     );
