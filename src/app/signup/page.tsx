@@ -11,19 +11,21 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function LoginPage() {
+export default function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+        setSuccess("");
         setLoading(true);
 
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signUp({
             email,
             password,
         });
@@ -35,8 +37,8 @@ export default function LoginPage() {
             return;
         }
 
-        // ✅ Redirect to homepage after login
-        router.push("/");
+        setSuccess("✅ Account created! Please check your email for verification.");
+        setTimeout(() => router.push("/login"), 2500);
     };
 
     return (
@@ -44,7 +46,7 @@ export default function LoginPage() {
             {/* soft spotlight */}
             <div className="pointer-events-none absolute inset-0 [background:radial-gradient(60%_40%_at_50%_20%,rgba(255,255,255,0.10),transparent_60%)]" />
 
-            {/* floating color blobs (match site vibe) */}
+            {/* floating color blobs */}
             <motion.div
                 aria-hidden
                 className="absolute -top-28 -left-20 h-72 w-72 rounded-full bg-fuchsia-500/25 blur-3xl"
@@ -70,7 +72,6 @@ export default function LoginPage() {
 
             {/* content */}
             <section className="relative mx-auto flex max-w-md flex-col items-stretch justify-center px-6 py-16">
-                {/* pill + title */}
                 <div className="mx-auto mb-4">
           <span className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3 py-1 text-xs font-semibold text-yellow-300">
             <svg width="14" height="14" viewBox="0 0 24 24" className="opacity-90">
@@ -79,13 +80,13 @@ export default function LoginPage() {
                   d="M12 2l1.8 4.7L18 8.5l-4.2 1.8L12 15l-1.8-4.7L6 8.5l4.2-1.8z"
               />
             </svg>
-            Member Access
+            Join the Studio
           </span>
                 </div>
 
                 <h1 className="mb-8 text-center text-4xl font-extrabold tracking-tight">
           <span className="bg-gradient-to-r from-yellow-300 via-pink-300 to-fuchsia-400 bg-clip-text text-transparent">
-            Login
+            Sign Up
           </span>
                 </h1>
 
@@ -93,7 +94,6 @@ export default function LoginPage() {
                     onSubmit={handleSubmit}
                     className="rounded-2xl border border-white/15 bg-white/10 p-6 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl"
                 >
-                    {/* Email */}
                     <div className="mb-4">
                         <label
                             htmlFor="email"
@@ -112,8 +112,7 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    {/* Password */}
-                    <div className="mb-2">
+                    <div className="mb-4">
                         <label
                             htmlFor="password"
                             className="mb-1.5 block text-sm font-medium text-purple-100"
@@ -131,48 +130,26 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    {/* Error Message */}
-                    {error && (
-                        <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
+                    {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
+                    {success && (
+                        <p className="text-green-400 text-sm mb-3 text-center">{success}</p>
                     )}
 
-                    {/* helper row */}
-                    <div className="mb-6 flex items-center justify-between">
-                        <div className="text-xs text-purple-200/80">
-                            <span className="opacity-80">Forgot your password?</span>{" "}
-                            <button
-                                type="button"
-                                className="font-semibold text-yellow-300 underline-offset-4 hover:underline"
-                                onClick={() => alert("Password reset coming soon!")}
-                            >
-                                Reset
-                            </button>
-                        </div>
-                        <Link
-                            href="/"
-                            className="text-xs text-purple-200/80 underline-offset-4 hover:underline"
-                        >
-                            ← Back Home
-                        </Link>
-                    </div>
-
-                    {/* submit */}
                     <button
                         type="submit"
                         disabled={loading}
                         className="w-full rounded-xl border border-purple-600/40 bg-gradient-to-r from-purple-600 to-fuchsia-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-purple-400"
                     >
-                        {loading ? "Logging in..." : "Login"}
+                        {loading ? "Creating Account..." : "Sign Up"}
                     </button>
 
-                    {/* bottom helper */}
                     <p className="mt-4 text-center text-sm text-purple-100/80">
-                        Don’t have an account?{" "}
+                        Already have an account?{" "}
                         <Link
-                            href="/signup"
+                            href="/login"
                             className="font-semibold text-yellow-300 hover:underline"
                         >
-                            Sign up
+                            Log in
                         </Link>
                     </p>
                 </form>

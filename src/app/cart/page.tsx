@@ -1,10 +1,16 @@
 "use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/context/CartContext";
 import type { CartItem } from "@/context/CartContext";
 
 export default function CartPage() {
+    const { user, loading } = useAuth(); // ✅ track login state
+    const router = useRouter();
     const cart = useCart();
     const items: CartItem[] = cart.items ?? [];
     const removeItem = cart.removeItem ?? (() => {});
@@ -12,6 +18,25 @@ export default function CartPage() {
     const total =
         cart.total ??
         items.reduce((s: number, it: CartItem) => s + (it.price ?? 0), 0);
+
+    // ✅ Redirect to login if not signed in
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push("/login");
+        }
+    }, [loading, user, router]);
+
+    if (loading) {
+        return (
+            <main className="min-h-screen flex items-center justify-center text-purple-200">
+                Checking your session...
+            </main>
+        );
+    }
+
+    if (!user) {
+        return null; // prevent flicker before redirect
+    }
 
     // ✅ Checkout handler
     const handleCheckout = async () => {
